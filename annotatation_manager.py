@@ -18,8 +18,9 @@ class AnnotationManager(QWidget):
 
         # **** 어노테이션 데이터 관련
         # 어노테이션 클래스 지정 정보
-        # self.CLASS_LIST = ['leaf', 'flower/fruit', 'entire', 'multi-entire']
-        self.CLASS_LIST = ['Head', 'Wire', 'entire']
+        # self.CLASS_LIST = ['leaf', 'flower/fruit', 'entire', 'multi-entire']  # 식물 어노테이션
+        # self.CLASS_LIST = ['leaf', 'flower/fruit']                            # 케이블 어노테이션
+        self.CLASS_LIST = ['defeated I', 'defeated II', 'defeated III', 'defeated IV']  
         self.annotation_formats = {'PASCAL_VOC': '.xml', 'YOLO_darknet': '.txt'}
         self.n_objects = len(self.CLASS_LIST)
 
@@ -169,7 +170,10 @@ class AnnotationManager(QWidget):
     # xml 어노테이션 정보 로드
     def get_xml_object_data(self, obj):
         class_name = obj.find('name').text
-        class_index = self.CLASS_LIST.index(class_name)
+        try: # catch error in case the class_name not exist in element list
+            class_index = self.CLASS_LIST.index(class_name)
+        except:
+            return ["", -1, 0, 0, 0, 0]
         bndbox = obj.find('bndbox')
         xmin = int(bndbox.find('xmin').text)
         xmax = int(bndbox.find('xmax').text)
@@ -261,7 +265,7 @@ class AnnotationManager(QWidget):
 
     # 어노테이션 바운딩 박스 정보 라벨 업데이트
     def update_label_anno_data(self, annotation_paths):
-        
+        # 라벨 부분 하드 코딩 체인지
         cnt_arrays = [0] * (self.n_objects)
         all_cnt = 0
 
@@ -275,6 +279,7 @@ class AnnotationManager(QWidget):
             object_list = annotation.findall('object')
             for obj in object_list:
                 class_name, class_index, xmin, ymin, xmax, ymax = self.get_xml_object_data(obj)
+
                 for i in range(self.n_objects):
                     if(class_name == self.CLASS_LIST[i]):
                         cnt_arrays[i] += 1
@@ -285,7 +290,7 @@ class AnnotationManager(QWidget):
         data_str = "( all = {} )".format(all_cnt)
         for i in range(self.n_objects):
             data_str += " [ %s = %d ]"%(self.CLASS_LIST[i], cnt_arrays[i])
-       
+
         final_str = base_str + data_str
         self.parent.label_anno_class_info.setText(final_str)
 
